@@ -2,11 +2,10 @@ package com.kevin.urlshortener.service;
 
 import com.kevin.urlshortener.entity.UrlEntry;
 import com.kevin.urlshortener.repository.UrlShortenerRepository;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Random;
 
 @Service
 public class UrlShortenerServiceImpl implements UrlShortenerService {
@@ -31,7 +30,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         UrlEntry urlEntry = new UrlEntry();
         urlEntry
                 .setOriginalUrl(originalUrl)
-                .setShortUrl(String.valueOf(new Random().nextInt()));
+                .setShortUrl(RandomStringUtils.random(20, true, true));
         UrlEntry result = urlShortenerRepository.save(urlEntry);
         return result.getShortUrl();
     }
