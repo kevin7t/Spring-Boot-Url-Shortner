@@ -1,15 +1,12 @@
 package com.kevin.urlshortener.controller;
 
+import com.kevin.urlshortener.dto.CreateRequest;
 import com.kevin.urlshortener.service.UrlShortenerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.InetAddress;
 import java.net.URI;
@@ -29,22 +26,23 @@ public class UrlShortenerController {
     @Value("${server.port}")
     private int port;
 
-    @GetMapping("/create/{originalUrl}")
-    public ResponseEntity<?> createShortUrl(@PathVariable String originalUrl) throws UnknownHostException {
-        //TODO change to POST + request object
-        String shortUrl = urlShortenerService.createShortUrl(originalUrl);
+    @PostMapping("/create")
+    public ResponseEntity<?> createShortUrl(@RequestBody CreateRequest createRequest) throws UnknownHostException {
+        String shortUrl = urlShortenerService.createShortUrl(createRequest.getOriginalUrl());
         String ip = InetAddress.getLocalHost().getHostAddress();
 
-        //TODO StringBuilder instead of concat
-        return ResponseEntity.ok("http://" + ip + ":" + port + "/tinyurl/get/" + shortUrl);
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("http://").append(ip).append(":").append(port).append("/tinyurl/get/").append(shortUrl);
+        return ResponseEntity.ok(stringBuilder.toString());
     }
 
 
     @GetMapping("/get/{shortUrl}")
     public ResponseEntity<?> getOriginalUrl(@PathVariable String shortUrl) throws URISyntaxException {
         String result = urlShortenerService.getOriginalUrl(shortUrl);
-        //TODO Check if result begins with http:// if not add it on
-        result = "http://" + result;
+        if (!result.startsWith("http://")){
+            result = "http://" + result;
+        }
         URI uri = new URI(result);
 
         //Setting Location header will redirect the browser
