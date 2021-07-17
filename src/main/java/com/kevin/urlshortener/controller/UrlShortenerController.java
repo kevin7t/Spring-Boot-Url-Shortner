@@ -20,27 +20,34 @@ import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
 @RequestMapping("/tinyurl")
 
 public class UrlShortenerController {
+
     @Autowired
     UrlShortenerService urlShortenerService;
 
     @Value("${server.port}")
     private int port;
 
+    private String ip;
+
+    public UrlShortenerController() throws UnknownHostException {
+        ip = InetAddress.getLocalHost().getHostAddress();
+    }
+    //TODO Add exception mapping to json output here when calling urlShortenerService
+
     @PostMapping("/create")
     public ResponseEntity<?> createShortUrl(@RequestBody CreateRequest createRequest) throws UnknownHostException {
         String shortUrl = urlShortenerService.createShortUrl(createRequest.getOriginalUrl());
-        String ip = InetAddress.getLocalHost().getHostAddress();
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("http://").append(ip).append(":").append(port).append("/tinyurl/get/").append(shortUrl);
+        stringBuilder.append("http://").append(ip).append(":").append(port).append("/tinyurl/").append(shortUrl);
         return ResponseEntity.ok(stringBuilder.toString());
     }
 
 
-    @GetMapping("/get/{shortUrl}")
+    @GetMapping("/{shortUrl}")
     public ResponseEntity<?> getOriginalUrl(@PathVariable String shortUrl) throws URISyntaxException {
         String result = urlShortenerService.getOriginalUrl(shortUrl);
-        if (!result.startsWith("http://")){
+        if (!result.startsWith("http://")) {
             result = "http://" + result;
         }
         URI uri = new URI(result);

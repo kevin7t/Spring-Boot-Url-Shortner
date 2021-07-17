@@ -2,9 +2,9 @@ package com.kevin.urlshortener.service;
 
 import com.kevin.urlshortener.entity.UrlEntry;
 import com.kevin.urlshortener.repository.UrlShortenerRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.Random;
 
@@ -16,8 +16,9 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     @Override
     public String createShortUrl(String originalUrl) {
-        if (originalUrl == null) {
-            //TODO Handle null original URL
+        //TODO Check if input URL is correct format e.g http/s / www. xyz . com
+        if (!StringUtils.isNotBlank(originalUrl)){
+            throw new IllegalArgumentException("Request cannot be blank");
         }
 
         //TODO cache before checking the DB
@@ -32,7 +33,6 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
                 .setOriginalUrl(originalUrl)
                 .setShortUrl(String.valueOf(new Random().nextInt()));
         UrlEntry result = urlShortenerRepository.save(urlEntry);
-        //TODO Handle exceptions if anything prevents saving
         return result.getShortUrl();
     }
 
@@ -40,7 +40,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     public String getOriginalUrl(String shortUrl) {
         UrlEntry originalUrl = urlShortenerRepository.findByShortUrl(shortUrl);
         if (originalUrl == null ){
-            //TODO Exception handling
+            throw new IllegalArgumentException("URL Not found");
         }
         return originalUrl.getOriginalUrl();
     }
