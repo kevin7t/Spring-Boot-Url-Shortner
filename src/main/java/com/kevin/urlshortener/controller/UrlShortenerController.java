@@ -2,12 +2,23 @@ package com.kevin.urlshortener.controller;
 
 import com.kevin.urlshortener.dto.CreateRequest;
 import com.kevin.urlshortener.service.UrlShortenerService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.BufferedImageHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.*;
+import net.glxn.qrgen.javase.QRCode;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -58,5 +69,28 @@ public class UrlShortenerController {
         return new ResponseEntity<>(httpHeaders, MOVED_PERMANENTLY);
     }
 
+    @PostMapping(value = "/qr", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<BufferedImage> getOriginalUrlQr(@RequestBody CreateRequest createRequest) throws Exception {
+        if (!StringUtils.isNotBlank(createRequest.getOriginalUrl())){
+            throw new IllegalArgumentException("Request URL cannot be blank");
+        }
+        return new ResponseEntity<>(generateQRCodeImage(createRequest.getOriginalUrl()), HttpStatus.OK);
+    }
+
+    //Required to respond with QR code
+    @Bean
+    public HttpMessageConverter<BufferedImage> createImageHttpMessageConverter() {
+        return new BufferedImageHttpMessageConverter();
+    }
+
+    public static BufferedImage generateQRCodeImage(String barcodeText) throws Exception {
+        ByteArrayOutputStream stream = QRCode
+                .from(barcodeText)
+                .withSize(250, 250)
+                .stream();
+        ByteArrayInputStream bis = new ByteArrayInputStream(stream.toByteArray());
+
+        return ImageIO.read(bis);
+    }
 
 }

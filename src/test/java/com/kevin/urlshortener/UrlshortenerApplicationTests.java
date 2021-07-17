@@ -69,6 +69,12 @@ class UrlshortenerApplicationTests {
         assertEquals("http://" + REQUEST_URL, getResult.andReturn().getResponse().getHeader("Location"));
     }
 
+    //TODO Write QR Code test
+    //Test - Test if buffered image can be decoded back to original URL
+
+
+    //Failure tests
+
     @Test
     public void create_fail() throws Exception {
         String request = requestToJson("");
