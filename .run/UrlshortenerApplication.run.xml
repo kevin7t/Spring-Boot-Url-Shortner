@@ -4,7 +4,7 @@
     <module name="urlshortener" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.kevin.urlshortener.*" />
+        <option name="PATTERN" value="com.kevin.urlshortener.integration.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

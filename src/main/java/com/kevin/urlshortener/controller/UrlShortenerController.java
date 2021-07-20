@@ -27,9 +27,7 @@ import java.net.UnknownHostException;
 import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
 
 @RestController
-//TODO Change this to application property value
 @RequestMapping("/tinyurl")
-
 public class UrlShortenerController {
 
     @Autowired
@@ -43,7 +41,6 @@ public class UrlShortenerController {
     public UrlShortenerController() throws UnknownHostException {
         ip = InetAddress.getLocalHost().getHostAddress();
     }
-    //TODO Add exception mapping to json output here when calling urlShortenerService
 
     @PostMapping("/create")
     public ResponseEntity<?> createShortUrl(@RequestBody CreateRequest createRequest) throws UnknownHostException {
@@ -58,12 +55,9 @@ public class UrlShortenerController {
     @GetMapping("/{shortUrl}")
     public ResponseEntity<?> getOriginalUrl(@PathVariable String shortUrl) throws URISyntaxException {
         String result = urlShortenerService.getOriginalUrl(shortUrl);
-        if (!result.startsWith("http://")) {
-            result = "http://" + result;
-        }
         URI uri = new URI(result);
 
-        //Setting Location header will redirect the browser
+        //Setting Location header will redirect the browser when the user clicks the URL in response
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(uri);
         return new ResponseEntity<>(httpHeaders, MOVED_PERMANENTLY);
@@ -77,11 +71,6 @@ public class UrlShortenerController {
         return new ResponseEntity<>(generateQRCodeImage(createRequest.getOriginalUrl()), HttpStatus.OK);
     }
 
-    //Required to respond with QR code
-    @Bean
-    public HttpMessageConverter<BufferedImage> createImageHttpMessageConverter() {
-        return new BufferedImageHttpMessageConverter();
-    }
 
     public static BufferedImage generateQRCodeImage(String barcodeText) throws Exception {
         ByteArrayOutputStream stream = QRCode

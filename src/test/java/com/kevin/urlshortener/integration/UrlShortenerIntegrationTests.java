@@ -1,22 +1,30 @@
-package com.kevin.urlshortener;
+package com.kevin.urlshortener.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kevin.urlshortener.AbstractTest;
+import com.kevin.urlshortener.UrlshortenerApplication;
+import com.kevin.urlshortener.controller.UrlShortenerController;
 import com.kevin.urlshortener.dto.CreateRequest;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.io.IOException;
-import java.io.StringWriter;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -25,14 +33,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = UrlshortenerApplication.class)
 @AutoConfigureMockMvc
-class UrlshortenerApplicationTests {
+class UrlShortenerIntegrationTests extends AbstractTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
     public void create_success() throws Exception {
-        String request = requestToJson("www.google.com");
+        String request = requestToJson("http://www.google.com");
 
         mockMvc.perform(
                 post("/tinyurl/create")
@@ -45,7 +53,7 @@ class UrlshortenerApplicationTests {
 
     @Test
     public void getAfterCreate_success() throws Exception {
-        final String REQUEST_URL = "www.google.com";
+        final String REQUEST_URL = "http://www.google.com";
 
         String request = requestToJson(REQUEST_URL);
         //Result of creation of shortener
@@ -66,11 +74,8 @@ class UrlshortenerApplicationTests {
         //Assert Location header is the redirected webpage therefore causing browser redirect
         assertEquals("", getResult.andReturn().getResponse().getContentAsString());
         //Asserting with Http:// as the code will add it, if not exist
-        assertEquals("http://" + REQUEST_URL, getResult.andReturn().getResponse().getHeader("Location"));
+        assertEquals(REQUEST_URL, getResult.andReturn().getResponse().getHeader("Location"));
     }
-
-    //TODO Write QR Code test
-    //Test - Test if buffered image can be decoded back to original URL
 
 
     //Failure tests
@@ -84,8 +89,8 @@ class UrlshortenerApplicationTests {
                     post("/tinyurl/create")
                             .header("Content-Type", "application/json")
                             .content(request))
-                    .andExpect(status().is(200))
-                    .andExpect(content().string(containsString("tinyurl/get/")));
+                    .andExpect(status().is(500))
+                    .andExpect(content().string(equalTo(loadFile("/samples/InternalServerError.json"))));
         } catch (Exception e) {
             assertTrue(e.getCause() instanceof IllegalArgumentException);
             assertEquals("Request cannot be blank", e.getCause().getMessage());
@@ -94,7 +99,6 @@ class UrlshortenerApplicationTests {
 
     @Test
     public void getUnknown_fail() throws Exception {
-
         try {
             ResultActions getResult = mockMvc.perform(
                     get("/tinyurl/123"));
@@ -103,13 +107,5 @@ class UrlshortenerApplicationTests {
             assertEquals("URL Not found", e.getCause().getMessage());
         }
 
-    }
-
-    private String requestToJson(String originalUrl) throws IOException {
-        CreateRequest createRequest = new CreateRequest(originalUrl);
-        ObjectMapper objectMapper = new ObjectMapper();
-        StringWriter sw = new StringWriter();
-        objectMapper.writeValue(sw, createRequest);
-        return sw.toString();
     }
 }

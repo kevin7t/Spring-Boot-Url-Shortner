@@ -10,5 +10,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CreateRequest {
+    //TODO Add validation - Not null on values
     public String originalUrl;
 }

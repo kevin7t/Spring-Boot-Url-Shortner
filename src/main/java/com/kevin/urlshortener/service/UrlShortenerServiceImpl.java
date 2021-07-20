@@ -4,6 +4,7 @@ import com.kevin.urlshortener.entity.UrlEntry;
 import com.kevin.urlshortener.repository.UrlShortenerRepository;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,17 +12,25 @@ import org.springframework.stereotype.Service;
 public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     @Autowired
-    UrlShortenerRepository urlShortenerRepository;
+    private UrlShortenerRepository urlShortenerRepository;
+
+    private UrlValidator urlValidator;
+
+    public UrlShortenerServiceImpl() {
+        this.urlValidator = new UrlValidator();
+    }
+
 
     @Override
     public String createShortUrl(String originalUrl) {
-        //TODO Check if input URL is correct format e.g http/s / www. xyz . com
         if (!StringUtils.isNotBlank(originalUrl)){
             throw new IllegalArgumentException("Request cannot be blank");
         }
 
-        //TODO cache before checking the DB
-        //TODO if already exists then return
+        if (!urlValidator.isValid(originalUrl)){
+            throw new IllegalArgumentException("URL Is not valid");
+        }
+
         UrlEntry alreadyExist = urlShortenerRepository.findByOriginalUrl(originalUrl);
         if (alreadyExist != null){
             return alreadyExist.getShortUrl();
